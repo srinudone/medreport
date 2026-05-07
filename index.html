@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>MedReport AI</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0c14;--s1:#131320;--s2:#1a1a28;--s3:#212132;
+  --border:#2a2a3e;--border2:#363650;
+  --accent:#00e5b0;--accent-dim:rgba(0,229,176,.12);
+  --blue:#5b8fff;--blue-dim:rgba(91,143,255,.12);
+  --red:#ff4f6d;--red-dim:rgba(255,79,109,.1);
+  --amber:#ffb020;
+  --text:#e0e4f5;--text2:#7e85a8;--text3:#454660;
+  --paper:#fff;
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+/* TOPBAR */
+.topbar{background:var(--s1);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;padding:8px 16px;flex-shrink:0}
+.logo{font-weight:700;font-size:15px;color:var(--accent);letter-spacing:.3px;display:flex;align-items:center;gap:7px}
+.logo-pulse{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,229,176,.5)}50%{box-shadow:0 0 0 7px rgba(0,229,176,0)}}
+.spacer{flex:1}
+.sel{background:var(--s2);border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:6px;font-size:12.5px;font-family:var(--font);cursor:pointer}
+.tbtn{background:var(--s2);border:1px solid var(--border);color:var(--text2);padding:5px 12px;border-radius:6px;font-size:12.5px;font-family:var(--font);cursor:pointer;transition:.15s}
+.tbtn:hover{background:var(--s3);color:var(--text)}
+.ai-chip{background:linear-gradient(90deg,rgba(0,229,176,.15),rgba(91,143,255,.15));border:1px solid rgba(0,229,176,.3);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;color:var(--accent);letter-spacing:.3px}
+
+/* TOOLBAR */
+.toolbar{background:var(--s1);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:1px;padding:4px 14px;flex-shrink:0;flex-wrap:wrap}
+.t{background:transparent;border:none;color:var(--text3);padding:5px 9px;border-radius:5px;cursor:pointer;font-size:12px;font-family:var(--font);transition:.1s}
+.t:hover{background:var(--s3);color:var(--text)}
+.tsep{width:1px;height:18px;background:var(--border);margin:0 5px}
+
+/* LAYOUT */
+.layout{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{width:230px;min-width:230px;background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.sb-sec{padding:14px 12px 8px}
+.sb-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px}
+.sb-item{padding:8px 10px;border-radius:6px;font-size:12.5px;color:var(--text2);cursor:pointer;transition:.12s;margin-bottom:2px;display:flex;align-items:center;gap:7px}
+.sb-item:hover{background:var(--s3);color:var(--text)}
+.sb-item.active{background:var(--accent-dim);color:var(--accent);border-left:2px solid var(--accent);padding-left:8px}
+
+/* AI QUICK ACTIONS */
+.ai-actions{padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.ai-act{width:100%;background:var(--s2);border:1px solid var(--border2);color:var(--text2);padding:9px 12px;border-radius:8px;font-size:12px;font-family:var(--font);cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;transition:.15s}
+.ai-act:hover{background:var(--s3);border-color:var(--blue);color:var(--text)}
+.ai-act.featured{background:var(--accent-dim);border-color:rgba(0,229,176,.3);color:var(--accent)}
+.ai-act.featured:hover{background:rgba(0,229,176,.2)}
+
+/* MIC SECTION */
+.mic-section{margin-top:auto;border-top:1px solid var(--border);padding:16px 12px}
+.mic-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+
+/* Big mic button */
+.mic-btn{width:68px;height:68px;border-radius:50%;border:2px solid var(--border2);background:var(--s2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:26px;transition:.2s;position:relative}
+.mic-btn:hover{border-color:var(--accent);box-shadow:0 0 20px var(--accent-dim)}
+.mic-btn.rec{border-color:var(--red);background:var(--red-dim);animation:rp 1.5s ease-in-out infinite}
+@keyframes rp{0%,100%{box-shadow:0 0 0 0 rgba(255,79,109,.4)}60%{box-shadow:0 0 0 14px rgba(255,79,109,0)}}
+.mic-label{font-size:11px;color:var(--text3);text-align:center}
+.mic-label.rec{color:var(--red)}
+
+/* Wave */
+.waves{display:flex;align-items:center;gap:3px;height:18px}
+.wv{width:3px;border-radius:3px;background:var(--red);animation:wva .7s ease-in-out infinite}
+.wv:nth-child(1){height:5px;animation-delay:0s}
+.wv:nth-child(2){height:13px;animation-delay:.1s}
+.wv:nth-child(3){height:8px;animation-delay:.2s}
+.wv:nth-child(4){height:16px;animation-delay:.3s}
+.wv:nth-child(5){height:6px;animation-delay:.4s}
+@keyframes wva{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.8)}}
+
+/* PAPER SCROLL */
+.paper-area{flex:1;overflow-y:auto;background:#c8c8d4;padding:28px 20px;display:flex;flex-direction:column;align-items:center}
+
+/* PAPER */
+.paper{width:780px;max-width:100%;background:var(--paper);box-shadow:0 6px 40px rgba(0,0,0,.5);border-radius:2px;padding:36px 44px 52px;color:#111;font-size:12.5px}
+
+/* Header table */
+.hdr-tbl{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:12px}
+.hdr-tbl td{border:1.5px solid #333;padding:5px 8px}
+.hdr-tbl .lbl{background:#f0f0f0;font-weight:600;font-size:11px;white-space:nowrap}
+.hdr-tbl input{border:none;outline:none;width:100%;font-family:var(--font);font-size:12px;background:transparent}
+
+.rpt-title{font-weight:700;font-size:13px;text-align:center;text-transform:uppercase;letter-spacing:.4px;margin:0 0 16px;color:#111}
+
+/* ─── KEY: STRUCTURED ORGAN ROWS ─── */
+.organ-table{width:100%;border-collapse:collapse;margin-bottom:4px}
+.organ-table th{background:#f0f0f0;font-weight:600;font-size:11.5px;padding:5px 8px;border:1.5px solid #333;text-align:left}
+.organ-row td{border:1.5px solid #ccc;vertical-align:top;padding:0}
+.organ-row td.name-cell{border:1.5px solid #333;background:#f8f8f8;padding:6px 10px;font-weight:700;font-size:12px;white-space:nowrap;min-width:130px;cursor:pointer;transition:.1s;vertical-align:middle}
+.organ-row td.name-cell:hover{background:#e8f5f0}
+.organ-row td.name-cell.active-field{background:#d4f5ec;border-color:var(--accent)}
+.organ-row td.meas-cell{border:1.5px solid #ccc;padding:4px 6px;width:80px;text-align:center}
+.organ-row td.meas-cell input{border:none;outline:none;width:100%;font-family:var(--font);font-size:12px;text-align:center;background:transparent}
+.organ-row td.unit-cell{border:1.5px solid #ccc;padding:4px 6px;font-size:11px;color:#555;width:36px;text-align:center}
+.organ-row td.finding-cell{border:1.5px solid #ccc;padding:4px 8px;min-height:32px}
+.finding-text{outline:none;min-height:28px;font-size:12px;line-height:1.7;color:#111;width:100%;display:block;padding:2px 0}
+.finding-text:empty::before{content:attr(data-ph);color:#bbb;pointer-events:none}
+
+/* AI loading indicator on a field */
+.organ-row td.finding-cell.loading{background:#f0fff8;border-color:#00e5b0}
+.organ-row td.name-cell.loading{background:#e0fff5}
+
+/* Impression */
+.imp-wrap{margin-top:20px;border-top:1.5px solid #333;padding-top:12px}
+.imp-label{font-weight:700;font-size:12.5px;text-decoration:underline;margin-bottom:5px}
+.imp-body{outline:none;min-height:48px;font-size:12.5px;line-height:1.9;color:#111}
+.imp-body:empty::before{content:'Click to type impression...';color:#bbb}
+
+/* BOTTOM */
+.botbar{background:var(--s1);border-top:1px solid var(--border);padding:8px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.raw-box{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:6px 11px;font-size:12px;color:var(--text2);min-height:36px;max-height:52px;overflow-y:auto;font-family:var(--mono)}
+.raw-box.corrected{border-color:var(--accent);color:var(--text);background:rgba(0,229,176,.05)}
+.raw-box.thinking{border-color:var(--blue);color:var(--blue)}
+.apply-btn{background:var(--accent);border:none;color:#0a1a14;font-family:var(--font);font-weight:700;font-size:12.5px;padding:8px 20px;border-radius:7px;cursor:pointer;flex-shrink:0;transition:.15s}
+.apply-btn:hover{opacity:.85}
+.apply-btn:disabled{opacity:.35;cursor:not-allowed}
+
+/* TOAST */
+.toast{position:fixed;bottom:68px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--s3);border:1px solid var(--border2);color:var(--text);padding:9px 18px;border-radius:8px;font-size:12.5px;opacity:0;transition:.3s;z-index:9999;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* FIELD HIGHLIGHT */
+.field-focus-hint{position:fixed;top:50%;right:248px;transform:translateY(-50%);background:var(--s2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text2);z-index:50;display:none;pointer-events:none}
+.field-focus-hint.show{display:block}
+
+@media print{.topbar,.toolbar,.sidebar,.botbar,.toast,.field-focus-hint{display:none!important}.layout{height:auto;overflow:visible}.paper-area{background:white;padding:0}.paper{box-shadow:none}}
+</style>
+</head>
+<body>
+
+<!-- KEY SCREEN -->
+<div id="keyScreen" style="display:none;position:fixed;inset:0;background:#0c0c14;z-index:9999;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif">
+  <div style="background:#1a1a28;border:1px solid #363650;border-radius:14px;padding:36px;width:440px;max-width:90vw">
+    <div style="font-size:22px;font-weight:700;color:#00e5b0;margin-bottom:8px">🔑 MedReport AI</div>
+    <div style="font-size:13px;color:#7e85a8;margin-bottom:24px">Enter your Anthropic API key once. It saves in your browser automatically.</div>
+    <input id="keyInput" type="text" placeholder="sk-ant-api03-..." 
+      style="width:100%;padding:11px 14px;background:#0c0c14;border:1px solid #363650;border-radius:8px;color:#e0e4f5;font-size:13px;margin-bottom:10px;outline:none;font-family:inherit"
+      onkeydown="if(event.key==='Enter')submitKey()"/>
+    <div id="keyErr" style="color:#ff4f6d;font-size:12px;margin-bottom:10px;min-height:16px"></div>
+    <button onclick="submitKey()" style="width:100%;background:#00e5b0;border:none;color:#0a1a14;font-weight:700;font-size:14px;padding:12px;border-radius:8px;cursor:pointer;font-family:inherit">▶ Start MedReport AI</button>
+    <div style="font-size:11px;color:#454660;margin-top:14px;text-align:center">Get key at console.anthropic.com → API Keys</div>
+  </div>
+</div>
+<div id="mainApp" style="display:none;flex-direction:column;height:100vh;overflow:hidden">
+<div class="topbar">
+  <div class="logo"><div class="logo-pulse"></div>MedReport AI</div>
+  <div style="width:1px;height:20px;background:var(--border);margin:0 6px"></div>
+  <select class="sel" id="tplSel" onchange="loadTpl(this.value)">
+    <option value="abd">USG — Whole Abdomen + Scrotum</option>
+    <option value="obs">USG — Obstetric</option>
+    <option value="pelvis">USG — Pelvis (Female)</option>
+    <option value="kub">USG — KUB</option>
+    <option value="xray">X-Ray — Chest PA</option>
+  </select>
+  <div class="spacer"></div>
+  <button class="tbtn" onclick="window.print()">🖨 Print</button>
+  <div class="ai-chip">✦ Claude AI</div>
+</div>
+
+<div class="toolbar">
+  <button class="t" onclick="document.execCommand('bold')"><b>B</b></button>
+  <button class="t" onclick="document.execCommand('italic')"><i>I</i></button>
+  <button class="t" onclick="document.execCommand('underline')"><u>U</u></button>
+  <div class="tsep"></div>
+  <button class="t" onclick="document.execCommand('justifyLeft')">⬅</button>
+  <button class="t" onclick="document.execCommand('justifyCenter')">≡</button>
+  <button class="t" onclick="document.execCommand('justifyRight')">➡</button>
+  <div class="tsep"></div>
+  <button class="t" onclick="document.execCommand('undo')">↺</button>
+  <button class="t" onclick="document.execCommand('redo')">↻</button>
+  <div class="tsep"></div>
+  <button class="t" onclick="clearAllFindings()">🗑 Clear</button>
+  <button class="t" onclick="window.print()">🖨 Print</button>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-sec">
+      <div class="sb-lbl">Templates</div>
+      <div class="sb-item active" onclick="switchTpl(this,'abd')">📋 Abd. + Scrotum</div>
+      <div class="sb-item" onclick="switchTpl(this,'obs')">🤰 Obstetric</div>
+      <div class="sb-item" onclick="switchTpl(this,'pelvis')">🔵 Pelvis (Female)</div>
+      <div class="sb-item" onclick="switchTpl(this,'kub')">💧 KUB</div>
+      <div class="sb-item" onclick="switchTpl(this,'xray')">🫁 Chest X-Ray</div>
+    </div>
+
+    <div class="sb-sec" style="border-top:1px solid var(--border)">
+      <div class="sb-lbl">AI Actions</div>
+      <div class="ai-actions" style="padding:0 0 4px">
+        <button class="ai-act featured" onclick="aiSmartDictate()">
+          🧠 Smart Fill from Voice
+        </button>
+        <button class="ai-act" onclick="aiFillNormal()">
+          ✨ Fill All Normal
+        </button>
+        <button class="ai-act" onclick="aiGenerateImpression()">
+          📝 Generate Impression
+        </button>
+        <button class="ai-act" onclick="aiEnhance()">
+          🔬 Enhance Report
+        </button>
+      </div>
+    </div>
+
+    <div class="mic-section">
+      <div class="sb-lbl" style="margin-bottom:12px">VOICE DICTATION</div>
+      <div class="mic-wrap">
+        <div class="waves" id="wvs" style="display:none">
+          <div class="wv"></div><div class="wv"></div><div class="wv"></div><div class="wv"></div><div class="wv"></div>
+        </div>
+        <div class="mic-btn" id="micBtn" onclick="toggleMic()">🎤</div>
+        <div class="mic-label" id="micLbl">Click mic to dictate</div>
+        <div style="font-size:10.5px;color:var(--text3);text-align:center;margin-top:2px;line-height:1.5">
+          Say organ name + findings.<br>AI routes to correct field.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAPER -->
+  <div class="paper-area">
+    <div class="paper" id="paper">
+      <!-- Header -->
+      <table class="hdr-tbl">
+        <tr>
+          <td class="lbl">Date</td><td><input type="date" id="rDate"/></td>
+          <td class="lbl">Patient Name / Age / Sex</td>
+          <td colspan="2"><input type="text" id="rPat" placeholder="Name   Age   M/F"/></td>
+          <td class="lbl">Ref. Doctor</td>
+          <td><input type="text" id="rDoc" placeholder="Dr."/></td>
+        </tr>
+        <tr>
+          <td class="lbl">Time</td><td><input type="time" id="rTime"/></td>
+          <td class="lbl">Clinical</td>
+          <td colspan="2"><input type="text" id="rClin" placeholder="Chief complaint..."/></td>
+          <td colspan="2"><input type="text" id="rNote" value="Thanks for referral."/></td>
+        </tr>
+      </table>
+
+      <div class="rpt-title" id="rTitle">ULTRASOUND SCANNING OF WHOLE ABDOMEN WITH SCROTUM</div>
+
+      <!-- STRUCTURED ORGAN TABLE — this is the key difference -->
+      <table class="organ-table" id="organTable">
+        <thead>
+          <tr>
+            <th style="min-width:130px">Organ</th>
+            <th style="width:80px">Measurement</th>
+            <th style="width:36px">Unit</th>
+            <th>Findings</th>
+          </tr>
+        </thead>
+        <tbody id="organBody"></tbody>
+      </table>
+
+      <div class="imp-wrap">
+        <div class="imp-label">IMPRESSION:</div>
+        <div class="imp-body" id="rImp" contenteditable="true" spellcheck="true"
+          data-field="IMPRESSION">Click to type or use AI to generate...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM -->
+<div class="botbar">
+  <div class="raw-box" id="rawBox">🎤 Speak and AI will auto-fill the correct organ fields...</div>
+  <button class="apply-btn" id="applyBtn" onclick="applySmartTranscript()" disabled>🧠 Smart Apply</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// TEMPLATE DEFINITIONS — each organ is a row with its own field
+// ══════════════════════════════════════════════════════════════
+const TPLS = {
+  abd:{
+    title:"ULTRASOUND SCANNING OF WHOLE ABDOMEN WITH SCROTUM",
+    organs:[
+      {id:"LIVER",       label:"LIVER",            unit:"mm",  ph:"Liver findings..."},
+      {id:"GALLBLADDER", label:"GALL BLADDER",      unit:"mm",  ph:"Gall bladder findings..."},
+      {id:"AORTA",       label:"AORTA / IVC / HV",  unit:"",    ph:"Aorta, IVC and hepatic veins..."},
+      {id:"PORTAL",      label:"PORTAL VEIN / CBD",  unit:"mm",  ph:"Portal vein, CBD, IHBR..."},
+      {id:"PANCREAS",    label:"PANCREAS",           unit:"mm",  ph:"Pancreas findings..."},
+      {id:"SPLEEN",      label:"SPLEEN",             unit:"mm",  ph:"Spleen findings..."},
+      {id:"KIDNEYS",     label:"KIDNEYS",            unit:"mm",  ph:"Right and left kidney findings..."},
+      {id:"BLADDER",     label:"URINARY BLADDER",    unit:"mm",  ph:"Bladder findings..."},
+      {id:"PROSTATE",    label:"PROSTATE",           unit:"mm",  ph:"Prostate findings..."},
+      {id:"NODES",       label:"LYMPH NODES",        unit:"",    ph:"Lymph nodes, ascites, effusion..."},
+      {id:"SCROTUM",     label:"SCROTUM",            unit:"mm",  ph:"Testes, epididymis, hydrocele..."},
+    ]
+  },
+  obs:{
+    title:"ULTRASOUND SCANNING — OBSTETRIC",
+    organs:[
+      {id:"UTERUS",     label:"UTERUS",         unit:"mm", ph:"Uterus findings, fetal position..."},
+      {id:"FHR",        label:"FETAL HEART",    unit:"bpm",ph:"FHR and regularity..."},
+      {id:"PLACENTA",   label:"PLACENTA",       unit:"",   ph:"Location, grade, previa..."},
+      {id:"AFI",        label:"AMNIOTIC FLUID", unit:"cm", ph:"Adequacy, AFI..."},
+      {id:"BIOMETRY",   label:"BIOMETRY / GA",  unit:"wks",ph:"BPD, HC, AC, FL, EFW, GA, EDD..."},
+    ]
+  },
+  pelvis:{
+    title:"ULTRASOUND SCANNING — PELVIS (FEMALE)",
+    organs:[
+      {id:"UTERUS",    label:"UTERUS",         unit:"mm",ph:"Size, shape, myometrium, endometrium..."},
+      {id:"ROVARY",    label:"RIGHT OVARY",    unit:"mm",ph:"Right ovary size and findings..."},
+      {id:"LOVARY",    label:"LEFT OVARY",     unit:"mm",ph:"Left ovary size and findings..."},
+      {id:"POD",       label:"POD",            unit:"",  ph:"Pouch of Douglas fluid..."},
+      {id:"BLADDER",   label:"URINARY BLADDER",unit:"",  ph:"Bladder findings..."},
+    ]
+  },
+  kub:{
+    title:"ULTRASOUND SCANNING — KUB",
+    organs:[
+      {id:"RKIDNEY",   label:"RIGHT KIDNEY",   unit:"mm",ph:"Size, echogenicity, CMD, calculi..."},
+      {id:"LKIDNEY",   label:"LEFT KIDNEY",    unit:"mm",ph:"Size, echogenicity, CMD, calculi..."},
+      {id:"BLADDER",   label:"URINARY BLADDER",unit:"mm",ph:"Distension, calculi, wall, residual..."},
+      {id:"URETERS",   label:"URETERS",        unit:"",  ph:"Dilatation..."},
+    ]
+  },
+  xray:{
+    title:"X-RAY CHEST — PA VIEW",
+    organs:[
+      {id:"TRACHEA",   label:"TRACHEA",        unit:"",ph:"Position..."},
+      {id:"MEDIASTINUM",label:"MEDIASTINUM",   unit:"",ph:"Width, shift..."},
+      {id:"HEART",     label:"HEART",          unit:"",ph:"Size, shape, CTR..."},
+      {id:"LUNGS",     label:"LUNGS",          unit:"",ph:"Consolidation, effusion, pneumothorax..."},
+      {id:"DIAPHRAGM", label:"DIAPHRAGM",      unit:"",ph:"Position, costophrenic angles..."},
+      {id:"BONES",     label:"BONY THORAX",    unit:"",ph:"Fractures, abnormality..."},
+    ]
+  }
+};
+
+// Normal findings for quick fill
+const NORMALS = {
+  abd:{
+    LIVER:"Normal in size, and normal echogenicity. No focal lesion.",
+    GALLBLADDER:"Partially distended. No calculi. No wall thickening.",
+    AORTA:"Aorta Normal. IVC & Hepatic veins Normal.",
+    PORTAL:"Portal vein Normal. CBD Normal. IHBR Normal.",
+    PANCREAS:"Normal in size, and echogenicity. MPD Normal. No calcification.",
+    SPLEEN:"Normal in size. Normal echogenicity. No focal lesion.",
+    KIDNEYS:"Bilateral kidneys normal in size, normal echogenicity. Normal CMD. No calculi. PCS normal. No cysts.",
+    BLADDER:"Partially distended. No calculi. No wall thickening.",
+    PROSTATE:"Normal in size, shows normal echogenicity.",
+    NODES:"No lymphadenopathy. No ascites. No effusion. No bowel wall thickening or dilatation.",
+    SCROTUM:"Both testes & epididymis normal in size and show homogeneous texture. No hydrocele. No varicocele."
+  },
+  obs:{
+    UTERUS:"Gravid uterus. Single live intrauterine fetus in cephalic presentation.",
+    FHR:"Fetal heart rate ___ bpm. Regular.",
+    PLACENTA:"Anterior / Posterior placenta, Grade ___. No placenta previa.",
+    AFI:"Adequate amniotic fluid. AFI: ___ cm.",
+    BIOMETRY:"BPD ___ mm, HC ___ mm, AC ___ mm, FL ___ mm. EFW ___ gm. GA ___ weeks. EDD ___."
+  },
+  pelvis:{
+    UTERUS:"Normal in size and shape. Myometrium echogenicity normal. No fibroids. Endometrial thickness ___ mm.",
+    ROVARY:"Normal in size and echogenicity. No cysts.",
+    LOVARY:"Normal in size and echogenicity. No cysts.",
+    POD:"No free fluid in pouch of Douglas.",
+    BLADDER:"Adequately filled. No calculi. Wall normal."
+  },
+  kub:{
+    RKIDNEY:"Normal in size. Normal echogenicity. Normal CMD. No calculi. PCS normal.",
+    LKIDNEY:"Normal in size. Normal echogenicity. Normal CMD. No calculi. PCS normal.",
+    BLADDER:"Partially distended. No calculi. Wall normal. No residual urine.",
+    URETERS:"Not dilated bilaterally."
+  },
+  xray:{
+    TRACHEA:"Central.",
+    MEDIASTINUM:"Normal width. No shift.",
+    HEART:"Normal size and shape. CTR < 0.5.",
+    LUNGS:"Clear lung fields bilaterally. No consolidation. No pleural effusion. No pneumothorax.",
+    DIAPHRAGM:"Normally placed. Costophrenic angles clear.",
+    BONES:"No rib fracture or bony abnormality."
+  }
+};
+
+let curTpl = 'abd';
+
+function loadTpl(key) {
+  const t = TPLS[key]; if(!t) return;
+  curTpl = key;
+  document.getElementById('rTitle').textContent = t.title;
+  const tbody = document.getElementById('organBody');
+  tbody.innerHTML = '';
+  t.organs.forEach(o => {
+    const tr = document.createElement('tr');
+    tr.className = 'organ-row';
+    tr.dataset.organId = o.id;
+    tr.innerHTML = `
+      <td class="name-cell" onclick="focusOrgField('${o.id}')">${o.label}</td>
+      <td class="meas-cell"><input type="text" placeholder="—" id="meas_${o.id}"/></td>
+      <td class="unit-cell">${o.unit}</td>
+      <td class="finding-cell" id="fc_${o.id}">
+        <div class="finding-text" id="ft_${o.id}" contenteditable="true" spellcheck="true" data-ph="${o.ph}"></div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('rImp').textContent = '';
+  setImpressionPlaceholder();
+}
+
+function switchTpl(el, key) {
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tplSel').value = key;
+  loadTpl(key);
+}
+
+function clearAllFindings() {
+  TPLS[curTpl].organs.forEach(o => {
+    const ft = document.getElementById('ft_'+o.id);
+    const me = document.getElementById('meas_'+o.id);
+    if(ft) ft.textContent = '';
+    if(me) me.value = '';
+  });
+  document.getElementById('rImp').textContent = '';
+}
+
+function setImpressionPlaceholder() {
+  const el = document.getElementById('rImp');
+  if(!el.textContent.trim()) el.setAttribute('data-empty','true');
+}
+
+// ══════════════════════════════════════════════════════════════
+// VOICE RECOGNITION
+// ══════════════════════════════════════════════════════════════
+let recog = null, isRec = false, rawBuf = '';
+
+function toggleMic() { isRec ? stopMic() : startMic(); }
+
+function startMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) { alert('Speech recognition requires Chrome or Edge.'); return; }
+  recog = new SR();
+  recog.continuous = true; recog.interimResults = true; recog.lang = 'en-US';
+  rawBuf = '';
+  recog.onresult = e => {
+    let fin='', im='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const t = e.results[i][0].transcript;
+      if(e.results[i].isFinal) fin += t+' '; else im += t;
+    }
+    if(fin) rawBuf += fin;
+    const box = document.getElementById('rawBox');
+    box.textContent = (rawBuf+im) || 'Listening...';
+    box.className = 'raw-box';
+    document.getElementById('applyBtn').disabled = !rawBuf.trim();
+  };
+  recog.onerror = e => { showToast('Mic error: '+e.error); stopMic(); };
+  recog.onend = () => { if(isRec) recog.start(); };
+  recog.start(); isRec = true;
+  document.getElementById('micBtn').classList.add('rec');
+  document.getElementById('micBtn').textContent = '⏹';
+  document.getElementById('wvs').style.display = 'flex';
+  const lbl = document.getElementById('micLbl');
+  lbl.textContent = 'Recording... (click to stop)'; lbl.classList.add('rec');
+  document.getElementById('rawBox').textContent = 'Listening...';
+  document.getElementById('rawBox').className = 'raw-box';
+  document.getElementById('applyBtn').disabled = true;
+}
+
+function stopMic() {
+  if(recog) recog.stop(); isRec = false;
+  document.getElementById('micBtn').classList.remove('rec');
+  document.getElementById('micBtn').textContent = '🎤';
+  document.getElementById('wvs').style.display = 'none';
+  const lbl = document.getElementById('micLbl');
+  lbl.textContent = 'Click mic to dictate'; lbl.classList.remove('rec');
+  if(rawBuf.trim()) {
+    // Auto-trigger smart fill
+    applySmartTranscript();
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// THE CORE FEATURE: AI SMART TRANSCRIPT → FILLS CORRECT FIELDS
+// ══════════════════════════════════════════════════════════════
+async function applySmartTranscript() {
+  const raw = rawBuf.trim() || document.getElementById('rawBox').textContent.trim();
+  if(!raw || raw.startsWith('🎤') || raw.startsWith('Listening')) {
+    showToast('Nothing to apply — please dictate first'); return;
+  }
+
+  const box = document.getElementById('rawBox');
+  box.textContent = '🧠 AI parsing and routing to organ fields...';
+  box.className = 'raw-box thinking';
+  document.getElementById('applyBtn').disabled = true;
+
+  const tpl = TPLS[curTpl];
+  const organList = tpl.organs.map(o => `${o.id} (${o.label})`).join(', ');
+
+  // Mark fields as loading
+  tpl.organs.forEach(o => {
+    const fc = document.getElementById('fc_'+o.id);
+    const nc = document.querySelector(`[data-organ-id="${o.id}"] .name-cell`);
+    if(fc) fc.classList.add('loading');
+    if(nc) nc.classList.add('loading');
+  });
+
+  try {
+    // Build dynamic properties for tool schema
+    const fieldProps = {};
+    tpl.organs.forEach(o => { if(o.id) fieldProps[o.id] = {type:'string', description:`Finding for ${o.label}`}; });
+    const measProps = {};
+    tpl.organs.forEach(o => { if(o.id && o.unit) measProps[o.id] = {type:'string', description:`Measurement in ${o.unit}`}; });
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':getKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-calls':'true'},
+      body: JSON.stringify({
+        model:'claude-haiku-4-5-20251001',
+        max_tokens:1500,
+        tools:[{
+          name:'fill_report',
+          description:'Fill radiology report organ fields from voice dictation. Fix all medical speech-to-text errors.',
+          input_schema:{
+            type:'object',
+            properties:{
+              fields:{
+                type:'object',
+                description:'Organ findings keyed by organ ID. Fix terms: echogenicity, calculi, portal vein, hepatic, parenchyma, myometrium etc.',
+                properties: fieldProps
+              },
+              measurements:{
+                type:'object',
+                properties: measProps
+              },
+              impression:{type:'string', description:'Overall impression if mentioned'}
+            },
+            required:['fields']
+          }
+        }],
+        tool_choice:{type:'tool', name:'fill_report'},
+        messages:[{role:'user', content:`Organ IDs available: ${organList}
+
+Voice dictation (fix all speech errors):
+"${raw}"`}]
+      })
+    });
+
+    const data = await res.json();
+    // Tool use response — guaranteed structured
+    const toolBlock = data.content?.find(c => c.type === 'tool_use');
+    if(!toolBlock) throw new Error('No tool response from AI');
+    const parsed = toolBlock.input;
+
+    // Clear loading states
+    tpl.organs.forEach(o => {
+      const fc = document.getElementById('fc_'+o.id);
+      const nc = document.querySelector(`[data-organ-id="${o.id}"] .name-cell`);
+      if(fc) fc.classList.remove('loading');
+      if(nc) nc.classList.remove('loading');
+    });
+
+    // Apply findings to correct fields
+    let filledCount = 0;
+    const fields = parsed.fields || {};
+    const measurements = parsed.measurements || {};
+
+    Object.entries(fields).forEach(([id, finding]) => {
+      if(!finding) return;
+      const ft = document.getElementById('ft_'+id);
+      if(ft) { ft.textContent = finding; filledCount++; }
+    });
+
+    Object.entries(measurements).forEach(([id, val]) => {
+      if(!val) return;
+      const me = document.getElementById('meas_'+id);
+      if(me) me.value = val;
+    });
+
+    if(parsed.impression) {
+      document.getElementById('rImp').textContent = parsed.impression;
+    }
+
+    box.textContent = `✅ AI filled ${filledCount} field${filledCount!==1?'s':''} from your dictation`;
+    box.className = 'raw-box corrected';
+    document.getElementById('applyBtn').disabled = true;
+    rawBuf = '';
+    showToast(`✅ ${filledCount} organ field${filledCount!==1?'s':''} filled by AI`);
+
+  } catch(err) {
+    // Clear loading
+    tpl.organs.forEach(o => {
+      const fc = document.getElementById('fc_'+o.id); const nc = document.querySelector(`[data-organ-id="${o.id}"] .name-cell`);
+      if(fc) fc.classList.remove('loading'); if(nc) nc.classList.remove('loading');
+    });
+    box.textContent = raw;
+    box.className = 'raw-box';
+    document.getElementById('applyBtn').disabled = false;
+    showToast('⚠️ AI error: '+err.message);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// AI ACTIONS
+// ══════════════════════════════════════════════════════════════
+async function aiFillNormal() {
+  const norms = NORMALS[curTpl] || {};
+  const tpl = TPLS[curTpl];
+  tpl.organs.forEach(o => {
+    const ft = document.getElementById('ft_'+o.id);
+    if(ft && norms[o.id]) ft.textContent = norms[o.id];
+  });
+  showToast('✨ All fields filled with normal findings');
+}
+
+async function aiGenerateImpression() {
+  const tpl = TPLS[curTpl];
+  let findings = '';
+  tpl.organs.forEach(o => {
+    const ft = document.getElementById('ft_'+o.id);
+    if(ft && ft.textContent.trim()) findings += `${o.label}: ${ft.textContent.trim()}\n`;
+  });
+  if(!findings) { showToast('Fill in findings first'); return; }
+  
+  showToast('🧠 AI generating impression...');
+  const imp = document.getElementById('rImp');
+  imp.textContent = '...generating...';
+  
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json','x-api-key':getKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-calls':'true'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:400,
+        messages:[{role:'user', content:`Generate a concise clinical impression (2-4 lines) for this radiology report. Be specific about any abnormalities, or state "No significant pathology" if all normal.\n\n${findings}\n\nOutput ONLY the impression text.`}]
+      })
+    });
+    const data = await res.json();
+    imp.textContent = data.content?.[0]?.text || 'No significant pathology detected.';
+    showToast('✅ Impression generated');
+  } catch(e) { imp.textContent = ''; showToast('AI error'); }
+}
+
+async function aiEnhance() {
+  const tpl = TPLS[curTpl];
+  showToast('🔬 AI enhancing report language...');
+  for(const o of tpl.organs) {
+    const ft = document.getElementById('ft_'+o.id);
+    if(!ft || !ft.textContent.trim()) continue;
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST', headers:{'Content-Type':'application/json','x-api-key':getKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-calls':'true'},
+        body: JSON.stringify({
+          model:'claude-sonnet-4-20250514', max_tokens:200,
+          messages:[{role:'user', content:`Rewrite this radiology finding in professional, concise radiological language. Fix any errors. Output ONLY the enhanced finding text, nothing else:\n\n"${ft.textContent}"`}]
+        })
+      });
+      const data = await res.json();
+      const enhanced = data.content?.[0]?.text?.trim();
+      if(enhanced) ft.textContent = enhanced;
+    } catch(e) {}
+  }
+  showToast('✅ Report enhanced');
+}
+
+async function aiSmartDictate() {
+  // Prompt to use mic
+  showToast('🎤 Click the mic button, dictate all findings, then stop');
+  document.getElementById('micBtn').style.animation = 'pulse 0.5s ease-in-out 3';
+  setTimeout(() => document.getElementById('micBtn').style.animation = '', 1600);
+}
+
+function focusOrgField(id) {
+  const ft = document.getElementById('ft_'+id);
+  if(ft) { ft.focus(); const r=document.createRange(),s=window.getSelection(); r.selectNodeContents(ft); r.collapse(false); s.removeAllRanges(); s.addRange(r); }
+}
+
+// ══════════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════════
+let toastT;
+function showToast(msg) {
+  const t = document.getElementById('toast'); t.textContent = msg;
+  t.classList.add('show');
+  if(toastT) clearTimeout(toastT);
+  toastT = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+function getKey(){
+  return sessionStorage.getItem('ak') || localStorage.getItem('ak') || '';
+}
+
+function saveKey(k){
+  localStorage.setItem('ak', k);
+  sessionStorage.setItem('ak', k);
+}
+
+function checkKey(){
+  const k = getKey();
+  if(!k){
+    document.getElementById('keyScreen').style.display='flex';
+    document.getElementById('mainApp').style.display='none';
+  } else {
+    document.getElementById('keyScreen').style.display='none';
+    document.getElementById('mainApp').style.display='flex';
+  }
+}
+
+function submitKey(){
+  const k = document.getElementById('keyInput').value.trim();
+  if(!k || !k.startsWith('sk-ant')){
+    document.getElementById('keyErr').textContent='Invalid key — must start with sk-ant-...';
+    return;
+  }
+  saveKey(k);
+  checkKey();
+}
+
+function changeKey(){
+  localStorage.removeItem('ak');
+  sessionStorage.removeItem('ak');
+  checkKey();
+}
+
+window.onload = () => {
+  const now = new Date();
+  document.getElementById('rDate').value = now.toISOString().split('T')[0];
+  document.getElementById('rTime').value = now.toTimeString().slice(0,5);
+  loadTpl('abd');
+  checkKey();
+};
+</script>
+</div>
+</body>
+</html>
